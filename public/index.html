@@ -13,54 +13,86 @@
 <body>
   <div id="cursor"></div>
   
-  <div id="app">
-    <!-- Navbar with Mobile Toggle -->
-    <nav class="nav">
-      <div class="logo" onclick="landing()" style="cursor:pointer">Heo <i>Media</i></div>
-      
-      <button class="menu-toggle" aria-label="Toggle Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <div class="navlinks">
-        <a href="#services" onclick="landing(); goMarketing('services'); return false;">01 Services</a>
-        <a href="#work" onclick="landing(); goMarketing('work'); return false;">02 Work</a>
-        <a href="#about" onclick="landing(); goMarketing('about'); return false;">03 About</a>
-        <a href="https://www.instagram.com/hubbanshaikhh?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener">04 Instagram</a>
-      </div>
-    </nav>
-  </div>
+  <!-- Empty app container for dynamic JavaScript rendering -->
+  <div id="app"></div>
 
   <script src="/app.js"></script>
   
-  <!-- Robust Mobile Navigation Handler (Fixed Click propagation) -->
   <script>
+    // Trigger initial landing render safely
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof landing === 'function') {
+        landing();
+      }
+      initScrollAnimations();
+    });
+
+    // Custom Cursor Movement & Hover Effects
+    const cursor = document.getElementById('cursor');
+    
+    window.addEventListener('mousemove', e => {
+      if (cursor) {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+      }
+    });
+
+    document.addEventListener('mouseover', e => {
+      if (e.target.matches('a, button, .button, .navitem, input, select')) {
+        cursor.classList.add('grow');
+      }
+    });
+
+    document.addEventListener('mouseout', e => {
+      if (e.target.matches('a, button, .button, .navitem, input, select')) {
+        cursor.classList.remove('grow');
+      }
+    });
+
+    // Scroll Reveal Animation Observer
+    function initScrollAnimations() {
+      const observerOptions = {
+        threshold: 0.1
+      };
+
+      const scrollObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-active');
+            // Optional: observer.unobserve(entry.target); agar ek hi baar animation chalana ho
+          }
+        });
+      }, observerOptions);
+
+      // Elements ko observe karo (panels, cards, hero section etc.)
+      document.querySelectorAll('.panel, .hero, .landing-pages, .visit-highlight, .float-card').forEach(el => {
+        el.classList.add('reveal-item');
+        scrollObserver.observe(el);
+      });
+    }
+
+    // Mobile menu toggle handler binding dynamically
     const observer = new MutationObserver(() => {
-      const nav = document.querySelector('.nav');
       const navlinks = document.querySelector('.navlinks');
       const toggleBtn = document.querySelector('.menu-toggle');
       
-      if (nav && navlinks && toggleBtn) {
-        // Bind toggle only once to prevent duplicate listeners
-        if (!toggleBtn.dataset.bound) {
-          toggleBtn.dataset.bound = 'true';
-          
-          toggleBtn.onclick = () => {
-            toggleBtn.classList.toggle('active');
-            navlinks.classList.toggle('active');
-          };
+      if (navlinks && toggleBtn && !toggleBtn.dataset.bound) {
+        toggleBtn.dataset.bound = 'true';
+        
+        toggleBtn.onclick = () => {
+          toggleBtn.classList.toggle('active');
+          navlinks.classList.toggle('active');
+        };
 
-          // Use addEventListener so we don't overwrite inline onclick functions
-          navlinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-              toggleBtn.classList.remove('active');
-              navlinks.classList.remove('active');
-            });
+        navlinks.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            toggleBtn.classList.remove('active');
+            navlinks.classList.remove('active');
           });
-        }
+        });
       }
+      // Naye content render hone par bhi scroll animation re-init kar sakte hain
+      initScrollAnimations();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
